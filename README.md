@@ -41,7 +41,7 @@ This repository demonstrates a **theoretical** brute-force approach to finding a
 
 ```bash
 git clone https://github.com/yourusername/btc-cracker-demo.git
-cd btc-cracker-demo
+cd btc-cracker
 cargo build --release
 ```
 2. Run

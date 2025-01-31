@@ -14,29 +14,20 @@ use bdk_wallet::{
 };
 use num_bigint::BigUint;
 use num_traits::{One, Zero};
-
 use console::{style, Emoji};
 use indicatif::{ProgressBar, ProgressStyle};
 
-// Emoji for styling
 static LOOKING_GLASS: Emoji<'_, '_> = Emoji("🔍", "");
 static SKULL_AND_CROSSBONES: Emoji<'_, '_> = Emoji("☠️", "");
 
 
-/// A struct that manages the logic for brute-forcing a target
-/// Bitcoin address by enumerating BIP39 mnemonics.
 pub struct BtcWalletCracker {
-    /// The target Bitcoin address to find
     target_address: Address<NetworkChecked>,
-    /// The upper bound of the search (2^256 - 1 for 24-word BIP39)
     max_entropy: BigUint,
-    /// How many attempts are processed before we update the display
     chunk_size: u64,
 }
 
 impl BtcWalletCracker {
-    /// Creates a new BtcWalletCracker for a given target address.
-    /// Fails if the address is invalid or not a mainnet address.
     pub fn new(target_address: &str) -> Result<Self, &'static str> {
         let checked_address = Address::from_str(target_address)
             .map_err(|_| "Unparsable Address")?
@@ -53,27 +44,17 @@ impl BtcWalletCracker {
         })
     }
 
-    /// Main entry point: enumerates the BIP39 space, deriving mnemonics
-    /// and addresses. Updates progress every `chunk_size` attempts.
     pub fn crack(&self) {
-        // Set up a spinner with a two-line display
         let pb = self.setup_spinner();
-
-        // Keep track of the last chunk’s start time for speed calculation
         let mut chunk_start_time = Instant::now();
-
-        // Start from zero attempts
         let mut attempts = BigUint::zero();
 
-        // Enumerate until we either find the key or exceed `max_entropy`
         while attempts <= self.max_entropy {
             let mnemonic = self.mnemonic_from_attempts(&attempts);
 
-            // Check if any derived address matches the target
             match self.check_mnemonic_address(&mnemonic) {
                 Ok(found_match) => {
                     if found_match {
-                        // We found a match!
                         pb.finish_with_message(style("Match found!").green().bold().to_string());
                         println!(
                             "{} {} Found matching mnemonic at attempts = {}!",
@@ -86,12 +67,9 @@ impl BtcWalletCracker {
                     }
                 }
                 Err(_) => {
-                    // If something went wrong in derivation, display an error
                     pb.set_message("Error occurred while checking mnemonic");
                 }
             }
-
-            // Increment our attempts by 1
             attempts += 1u32;
 
             // Once every `chunk_size` attempts, update the second line with speed stats
@@ -105,7 +83,6 @@ impl BtcWalletCracker {
                     &attempts, average_speed
                 ));
 
-                // Reset the chunk timer
                 chunk_start_time = now;
             }
         }

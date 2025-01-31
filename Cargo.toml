@@ -1,12 +1,10 @@
 [package]
-name = "pp-btc-wallet-cracker"
+name = "btc-wallet-cracker"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
 bdk_wallet = { version = "1.0.0", features = ["keys-bip39"] }
 clap = { version = "4.5.27", features = ["derive"] }
-console = "0.15.10"
-indicatif = "0.17.9"
 num-bigint = { version = "0.4", features = [] }
 num-traits = { version = "0.2" }

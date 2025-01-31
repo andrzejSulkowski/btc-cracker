@@ -73,21 +73,11 @@ impl BtcWalletCracker {
             attempts += 1u32;
 
             // Once every `chunk_size` attempts, update the second line with speed stats
-            if &attempts % self.chunk_size == BigUint::zero() {
-                let now = Instant::now();
-                let elapsed = now.duration_since(chunk_start_time).as_secs_f64();
-                let average_speed = self.chunk_size as f64 / (elapsed + f64::EPSILON);
-
-                pb.set_message(format!(
-                    "Checked {} seeds total (~{:.2} seeds/s)",
-                    &attempts, average_speed
-                ));
-
-                chunk_start_time = now;
+            if let Some(new_chunk_start_time) = self.maybe_log(&attempts, &chunk_start_time, &pb) {
+                chunk_start_time = new_chunk_start_time;
             }
         }
 
-        // Finished or reached max_entropy
         println!("{} Finished. Total attempts: {}", LOOKING_GLASS, attempts);
     }
 
@@ -165,5 +155,19 @@ impl BtcWalletCracker {
         pb.set_message("Starting up...");
 
         pb
+    }
+    fn maybe_log(&self, i: &BigUint, chunk_start_time: &Instant, pb: &ProgressBar) -> Option<Instant> {
+        if i % self.chunk_size == BigUint::zero() {
+            let now = Instant::now();
+            let elapsed = now.duration_since(*chunk_start_time).as_secs_f64();
+            let average_speed = self.chunk_size as f64 / (elapsed + f64::EPSILON);
+
+            pb.set_message(format!(
+                "Checked {} seeds total (~{:.2} seeds/s)",
+                &i, average_speed
+            ));
+            return Some(now);
+        }
+        None
     }
 }
